@@ -22,7 +22,7 @@ g.append("text")
   .attr("y", HEIGHT + 110)
   .attr("font-size", "20px")
   .attr("text-anchor", "middle")
-  .text("The word's tallest buildings")
+  .text("The world's tallest buildings")
 
 // Y label
 g.append("text")
@@ -38,6 +38,12 @@ d3.json("data/buildings.json").then(data => {
   data.forEach(d => {
     d.height = Number(d.height)
   })
+
+  const color = d3.scaleOrdinal(d3.schemeCategory10)
+
+  const tooltip = d3.select("body").append("div")
+    .attr("class", "tooltip")
+    .style("opacity", 0)
 
   const x = d3.scaleBand()
     .domain(data.map(d => d.name))
@@ -72,8 +78,17 @@ d3.json("data/buildings.json").then(data => {
   
   rects.enter().append("rect")
     .attr("y", d => y(d.height))
-    .attr("x", (d) => x(d.name))
+    .attr("x", d => x(d.name))
     .attr("width", x.bandwidth)
     .attr("height", d => HEIGHT - y(d.height))
-    .attr("fill", "grey")
+    .attr("fill", (d, i) => color(i))
+    .on("mouseover", (event, d) => {
+      tooltip.transition().duration(200).style("opacity", 0.9)
+      tooltip.html(`${d.name}<br>${d.height} m`)
+        .style("left", (event.pageX + 5) + "px")
+        .style("top", (event.pageY - 28) + "px")
+    })
+    .on("mouseout", () => {
+      tooltip.transition().duration(500).style("opacity", 0)
+    })
 })
