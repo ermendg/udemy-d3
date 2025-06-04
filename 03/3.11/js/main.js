@@ -12,6 +12,47 @@ const svg = d3.select("#chart-area").append("svg")
   .attr("width", WIDTH + MARGIN.LEFT + MARGIN.RIGHT)
   .attr("height", HEIGHT + MARGIN.TOP + MARGIN.BOTTOM)
 
+// --- Definitions for gradients and filters ---
+const defs = svg.append("defs")
+
+// Gradient used to give bars a simple 3D look
+const gradient = defs.append("linearGradient")
+  .attr("id", "bar-gradient")
+  .attr("x1", "0%")
+  .attr("x2", "0%")
+  .attr("y1", "0%")
+  .attr("y2", "100%")
+
+gradient.append("stop")
+  .attr("offset", "0%")
+  .attr("stop-color", "#f2f2f2")
+
+gradient.append("stop")
+  .attr("offset", "100%")
+  .attr("stop-color", "#bfbfbf")
+
+// Drop shadow for additional depth
+const filter = defs.append("filter")
+  .attr("id", "drop-shadow")
+  .attr("height", "130%")
+
+filter.append("feGaussianBlur")
+  .attr("in", "SourceAlpha")
+  .attr("stdDeviation", 3)
+  .attr("result", "blur")
+
+filter.append("feOffset")
+  .attr("in", "blur")
+  .attr("dx", 2)
+  .attr("dy", 2)
+  .attr("result", "offsetBlur")
+
+const feMerge = filter.append("feMerge")
+feMerge.append("feMergeNode")
+  .attr("in", "offsetBlur")
+feMerge.append("feMergeNode")
+  .attr("in", "SourceGraphic")
+
 const g = svg.append("g")
   .attr("transform", `translate(${MARGIN.LEFT}, ${MARGIN.TOP})`)
 
@@ -69,11 +110,16 @@ d3.json("data/buildings.json").then(data => {
 
   const rects = g.selectAll("rect")
     .data(data)
-  
+
   rects.enter().append("rect")
-    .attr("y", d => y(d.height))
-    .attr("x", (d) => x(d.name))
+    .attr("x", d => x(d.name))
     .attr("width", x.bandwidth)
-    .attr("height", d => HEIGHT - y(d.height))
-    .attr("fill", "grey")
+    .attr("y", HEIGHT)
+    .attr("height", 0)
+    .attr("fill", "url(#bar-gradient)")
+    .style("filter", "url(#drop-shadow)")
+    .transition()
+      .duration(1000)
+      .attr("y", d => y(d.height))
+      .attr("height", d => HEIGHT - y(d.height));
 })
